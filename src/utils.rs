@@ -226,19 +226,6 @@ pub struct Stats {
     pub intelligence: u8,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum SortColumn {
-    ID,
-    Name,
-    Kick,
-    Control,
-    Technique,
-    Pressure,
-    Physical,
-    Agility,
-    Intelligence,
-}
-
 pub struct Progress {
     internal: Arc<InternalProgress>,
 }

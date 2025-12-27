@@ -12,7 +12,7 @@ use crate::{
     database::Database, utils::{BASE_URL, Character, Progress, SEARCH_URL}
 };
 
-pub async fn get_character_list(client: &Client, progress: &Progress, params: &Vec<(&str, &str)>) -> Result<Vec<Character>, Box<dyn std::error::Error>> {
+pub async fn get_character_list(client: &Client, progress: &Progress, params: &Vec<(&str, &str)>, max_parallelism: usize) -> Result<Vec<Character>, Box<dyn std::error::Error>> {
     let response = client.post(BASE_URL.to_owned() + SEARCH_URL)
         .form(&params)
         .send()
@@ -60,34 +60,8 @@ pub async fn get_character_list(client: &Client, progress: &Progress, params: &V
                 parse_search_result(&new_text_data).unwrap().0
             }
         })
-        .buffer_unordered(10)
+        .buffer_unordered(max_parallelism)
         .collect::<Vec<_>>();
-
-    // let fetch_handle = tokio::spawn(async move {
-    //     characters_futures.await
-    // });
-
-    // let progress_handle = tokio::spawn(async move {
-    //     let mut previous_value = 0;
-    //     loop {
-    //         let fetched = pages_fetched_clone.load(Ordering::Relaxed);
-    //         if previous_value != fetched {
-    //             println!("Pages fetched: {}/{}", fetched, nb_pages);
-    //             previous_value = fetched;
-    //         }
-
-    //         if fetched >= nb_pages {
-    //             break;
-    //         }
-
-    //         sleep(Duration::from_millis(200)).await;
-    //     }
-    // });
-
-    // let (new_characters, _) = tokio::join!(
-    //     fetch_handle,
-    //     progress_handle,
-    // );
 
     let new_characters = characters_futures.await;
 
@@ -96,12 +70,11 @@ pub async fn get_character_list(client: &Client, progress: &Progress, params: &V
         .flatten()
         .collect();
     
-    
     character_summaries.extend(flat_characters);
     return Ok(character_summaries)
 }
 
-pub async fn populate_character_stats(database: &mut Database, client: &Client, progress: &Progress, character_summaries: Vec<Character>) -> Vec<Character> {
+pub async fn populate_character_stats(database: &mut Database, client: &Client, progress: &Progress, character_summaries: Vec<Character>, max_parallelism: usize) -> Vec<Character> {
     let character_nb = character_summaries.len() as u16;
 
     progress.set_char_total(character_nb);
@@ -130,34 +103,8 @@ pub async fn populate_character_stats(database: &mut Database, client: &Client, 
                 character
             }
         })
-        .buffer_unordered(20)
+        .buffer_unordered(max_parallelism)
         .collect::<Vec<_>>();
 
-    // let stats_handle = tokio::spawn(async move {
-    //     character_futures.await
-    // });
-
-    // let progress_handle = tokio::spawn(async move {
-    //     let mut previous_value = 0;
-    //     loop {
-    //         let fetched = char_stats_fetched.load(Ordering::Relaxed);
-    //         if previous_value != fetched {
-    //             println!("Stats fetched: {}/{}", fetched, character_nb);
-    //             previous_value = fetched;
-    //         }
-
-    //         if fetched >= character_nb {
-    //             break;
-    //         }
-
-    //         sleep(Duration::from_millis(100)).await;
-    //     }
-    // });
-
-    // let (characters, _) = tokio::join!(
-    //     stats_handle,
-    //     progress_handle,
-    // );
-    // characters.unwrap()
     character_futures.await
 }

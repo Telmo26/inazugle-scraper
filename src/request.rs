@@ -50,7 +50,7 @@ impl Request {
         self.games.toggle(game.flag());
     }
 
-    pub async fn send(&self, cache: &mut Database, progress: Progress) -> Vec<Character> {
+    pub async fn send(&self, cache: &mut Database, max_parallelism: usize, progress: Progress) -> Vec<Character> {
         let mut params = vec![("rc", "0"), ("per_page", "200")];
 
         if self.name != "" {
@@ -75,8 +75,8 @@ impl Request {
             }
         }
 
-        let mut characters = get_character_list(&self.client, &progress, &params).await.unwrap();
-        characters = populate_character_stats(cache, &self.client, &progress, characters).await;
+        let mut characters = get_character_list(&self.client, &progress, &params, max_parallelism).await.unwrap();
+        characters = populate_character_stats(cache, &self.client, &progress, characters, max_parallelism).await;
         characters
     }
 }
