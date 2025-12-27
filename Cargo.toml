@@ -1,0 +1,20 @@
+[package]
+name = "inazugle_scraper"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+lto = true        # Link Time Optimization
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[dependencies]
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread"] }
+reqwest = "0.12"
+scraper = "0.25"
+futures = "0.3.31"
+rusqlite = { version = "0.38", features = ["bundled"] }
+eframe = { version = "0.33", features = ["wgpu"] }
+bitflags = "2"
+egui_extras = "0.33"
